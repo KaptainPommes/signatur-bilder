@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Familienbuch – Ersteinrichtung</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600&family=Karla:wght@400;600;700&family=IBM+Plex+Mono:wght@500&display=swap" />
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+  <div class="auth-shell">
+    <div class="auth-card">
+      <div class="auth-mark"><span class="dot"></span><span class="brand">Familienbuch</span></div>
+      <h1>Willkommen! Legt euer erstes Konto an</h1>
+      <p class="auth-sub">Damit richtet ihr euer privates Familienbuch ein. Ein zweites Konto für Partner/-in könnt ihr danach direkt in der App anlegen.</p>
+      <div id="error" class="error-banner" hidden></div>
+      <form id="setup-form">
+        <div class="field">
+          <label for="displayName">Dein Name</label>
+          <input id="displayName" name="displayName" type="text" autocomplete="name" required maxlength="60" placeholder="z. B. Erich" />
+        </div>
+        <div class="field">
+          <label for="username">Benutzername</label>
+          <input id="username" name="username" type="text" autocomplete="username" required minlength="3" maxlength="40" placeholder="z. B. erich" />
+        </div>
+        <div class="field">
+          <label for="password">Passwort</label>
+          <input id="password" name="password" type="password" autocomplete="new-password" required minlength="8" placeholder="mindestens 8 Zeichen" />
+        </div>
+        <button class="btn btn-primary" type="submit">Familienbuch einrichten</button>
+      </form>
+    </div>
+  </div>
+  <script src="/js/setup.js"></script>
+</body>
+</html>

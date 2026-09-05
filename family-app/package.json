@@ -1,0 +1,18 @@
+{
+  "name": "familienbuch",
+  "version": "1.0.0",
+  "description": "Private Familien-App zum Verwalten wichtiger Familiendaten",
+  "private": true,
+  "type": "commonjs",
+  "engines": {
+    "node": ">=22.5.0"
+  },
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cookie-parser": "^1.4.6",
+    "express": "^4.19.2"
+  }
+}

@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Familienbuch</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600&family=Karla:wght@400;600;700&family=IBM+Plex+Mono:wght@500&display=swap" />
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+  <header class="app-header">
+    <h1 class="brand"><span class="dot"></span>Familienbuch</h1>
+    <div class="header-actions">
+      <button class="icon-btn" id="theme-toggle" title="Farbschema umschalten" aria-label="Farbschema umschalten">◐</button>
+      <button class="icon-btn" id="add-account-btn" title="Konto für Partner/-in hinzufügen" aria-label="Konto hinzufügen">+👤</button>
+      <div class="avatar-pill">
+        <span class="avatar" id="me-avatar"></span>
+        <span id="me-name"></span>
+      </div>
+      <button class="btn btn-ghost btn-sm" id="logout-btn">Abmelden</button>
+    </div>
+  </header>
+
+  <main>
+    <section class="household-strip">
+      <div class="household-strip-head">
+        <h2>Zuhause &amp; Notfall</h2>
+        <button class="btn btn-ghost btn-sm" id="edit-household-btn">Bearbeiten</button>
+      </div>
+      <div class="household-grid" id="household-view">
+        <div class="household-item"><div class="label">Adresse</div><div class="value" data-field="address"></div></div>
+        <div class="household-item"><div class="label">Telefon Zuhause</div><div class="value" data-field="phone"></div></div>
+        <div class="household-item"><div class="label">Hausarzt/-ärztin</div><div class="value" data-field="doctor_name"></div></div>
+        <div class="household-item"><div class="label">Telefon Hausarzt</div><div class="value" data-field="doctor_phone"></div></div>
+        <div class="household-item"><div class="label">Notfallkontakt</div><div class="value" data-field="emergency_name"></div></div>
+        <div class="household-item"><div class="label">Telefon Notfallkontakt</div><div class="value" data-field="emergency_phone"></div></div>
+        <div class="household-item" style="grid-column: 1 / -1"><div class="label">Notizen</div><div class="value" data-field="notes"></div></div>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-head">
+        <h2>Familienmitglieder</h2>
+      </div>
+      <div class="member-grid" id="member-grid">
+        <button class="add-card" id="add-member-btn">
+          <span class="plus">+</span>
+          Familienmitglied hinzufügen
+        </button>
+      </div>
+    </section>
+  </main>
+
+  <!-- Familienmitglied: Detail/Bearbeiten -->
+  <div class="modal-backdrop" id="member-modal" hidden>
+    <div class="modal-panel">
+      <div class="modal-head">
+        <div class="modal-head-titles">
+          <h2 id="member-modal-title">Neues Familienmitglied</h2>
+          <div class="relation" id="member-modal-subtitle"></div>
+        </div>
+        <button class="close-x" id="member-modal-close" aria-label="Schließen">×</button>
+      </div>
+
+      <div class="tabs">
+        <button class="tab-btn active" data-tab="basis">Basis</button>
+        <button class="tab-btn" data-tab="gesundheit">Gesundheit</button>
+        <button class="tab-btn" data-tab="dokumente">Dokumente</button>
+        <button class="tab-btn" data-tab="notizen">Notizen</button>
+      </div>
+
+      <form id="member-form">
+        <input type="hidden" id="m-id" />
+
+        <div class="tab-panel active" data-panel="basis">
+          <div class="field-grid">
+            <div class="field full">
+              <label for="m-name">Name</label>
+              <input id="m-name" required maxlength="80" />
+            </div>
+            <div class="field">
+              <label for="m-relation">Rolle in der Familie</label>
+              <select id="m-relation">
+                <option value="">– wählen –</option>
+                <option>Mutter</option>
+                <option>Vater</option>
+                <option>Kind</option>
+                <option>Sonstige</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="m-birthdate">Geburtsdatum</label>
+              <input id="m-birthdate" type="date" class="mono" />
+            </div>
+            <div class="field full">
+              <label for="m-school">Kita / Schule / Arbeitgeber</label>
+              <input id="m-school" maxlength="120" />
+            </div>
+          </div>
+        </div>
+
+        <div class="tab-panel" data-panel="gesundheit">
+          <div class="field-grid">
+            <div class="field">
+              <label for="m-blood">Blutgruppe</label>
+              <input id="m-blood" class="mono" maxlength="10" placeholder="z. B. A+" />
+            </div>
+            <div class="field">
+              <label for="m-doctor">Arzt/Ärztin</label>
+              <input id="m-doctor" maxlength="80" />
+            </div>
+            <div class="field">
+              <label for="m-doctor-phone">Telefon Arzt/Ärztin</label>
+              <input id="m-doctor-phone" class="mono" maxlength="40" />
+            </div>
+            <div class="field full">
+              <label for="m-allergies">Allergien &amp; Unverträglichkeiten</label>
+              <textarea id="m-allergies" maxlength="500" placeholder="z. B. Hausstaub, Penicillin"></textarea>
+            </div>
+            <div class="field full">
+              <label for="m-medications">Medikamente</label>
+              <textarea id="m-medications" maxlength="500"></textarea>
+            </div>
+          </div>
+        </div>
+
+        <div class="tab-panel" data-panel="dokumente">
+          <div class="field-grid">
+            <div class="field">
+              <label for="m-doc-type">Ausweisdokument</label>
+              <select id="m-doc-type">
+                <option value="">– wählen –</option>
+                <option>Personalausweis</option>
+                <option>Reisepass</option>
+                <option>Kinderreisepass</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="m-doc-number">Dokumentennummer</label>
+              <input id="m-doc-number" class="mono field-doc-number" maxlength="40" />
+            </div>
+            <div class="field">
+              <label for="m-doc-expiry">Gültig bis</label>
+              <input id="m-doc-expiry" type="date" class="mono" />
+            </div>
+            <div class="field">
+              <label for="m-insurance">Krankenversicherung</label>
+              <input id="m-insurance" maxlength="80" />
+            </div>
+            <div class="field full">
+              <label for="m-insurance-number">Versichertennummer</label>
+              <input id="m-insurance-number" class="mono" maxlength="60" />
+            </div>
+          </div>
+        </div>
+
+        <div class="tab-panel" data-panel="notizen">
+          <div class="field">
+            <label for="m-notes">Notizen</label>
+            <textarea id="m-notes" maxlength="2000" rows="8" placeholder="z. B. Schuhgröße, Vorlieben, Sonstiges"></textarea>
+          </div>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn btn-danger btn-sm" id="delete-member-btn" hidden>Entfernen</button>
+          <span class="save-status" id="member-save-status"></span>
+          <button type="submit" class="btn btn-primary btn-sm" style="width:auto">Speichern</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Haushalt bearbeiten -->
+  <div class="modal-backdrop" id="household-modal" hidden>
+    <div class="modal-panel" style="width:min(480px,100%)">
+      <div class="modal-head">
+        <div class="modal-head-titles"><h2>Zuhause &amp; Notfall</h2></div>
+        <button class="close-x" id="household-modal-close" aria-label="Schließen">×</button>
+      </div>
+      <form id="household-form">
+        <div class="field">
+          <label for="h-address">Adresse</label>
+          <textarea id="h-address" maxlength="300"></textarea>
+        </div>
+        <div class="field">
+          <label for="h-phone">Telefon Zuhause</label>
+          <input id="h-phone" class="mono" maxlength="40" />
+        </div>
+        <div class="field">
+          <label for="h-doctor">Hausarzt/-ärztin</label>
+          <input id="h-doctor" maxlength="80" />
+        </div>
+        <div class="field">
+          <label for="h-doctor-phone">Telefon Hausarzt</label>
+          <input id="h-doctor-phone" class="mono" maxlength="40" />
+        </div>
+        <div class="field">
+          <label for="h-emergency">Notfallkontakt (Name)</label>
+          <input id="h-emergency" maxlength="80" />
+        </div>
+        <div class="field">
+          <label for="h-emergency-phone">Notfallkontakt (Telefon)</label>
+          <input id="h-emergency-phone" class="mono" maxlength="40" />
+        </div>
+        <div class="field">
+          <label for="h-notes">Notizen</label>
+          <textarea id="h-notes" maxlength="1000"></textarea>
+        </div>
+        <div class="modal-actions">
+          <span class="save-status" id="household-save-status"></span>
+          <button type="submit" class="btn btn-primary btn-sm" style="width:auto">Speichern</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Konto hinzufügen -->
+  <div class="modal-backdrop" id="account-modal" hidden>
+    <div class="modal-panel" style="width:min(420px,100%)">
+      <div class="modal-head">
+        <div class="modal-head-titles"><h2>Konto hinzufügen</h2></div>
+        <button class="close-x" id="account-modal-close" aria-label="Schließen">×</button>
+      </div>
+      <p class="field-hint" style="margin-top:-8px;margin-bottom:16px">Für Partner/-in oder ältere Kinder mit eigenem Zugang.</p>
+      <div id="account-error" class="error-banner" hidden></div>
+      <form id="account-form">
+        <div class="field">
+          <label for="a-name">Anzeigename</label>
+          <input id="a-name" required maxlength="60" />
+        </div>
+        <div class="field">
+          <label for="a-username">Benutzername</label>
+          <input id="a-username" required minlength="3" maxlength="40" />
+        </div>
+        <div class="field">
+          <label for="a-password">Passwort</label>
+          <input id="a-password" type="password" required minlength="8" />
+        </div>
+        <button type="submit" class="btn btn-primary">Konto anlegen</button>
+      </form>
+    </div>
+  </div>
+
+  <script src="/js/app.js"></script>
+</body>
+</html>
