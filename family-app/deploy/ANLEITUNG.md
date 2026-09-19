@@ -1,11 +1,29 @@
-# Familienbuch auf dem Netcup-Server einrichten
+# Familienbuch auf einem Server einrichten
 
 Diese Anleitung ist für Einsteiger geschrieben. Du musst nichts verstehen – nur
 die Befehle kopieren und einfügen. Dauer: ungefähr 15 Minuten.
 
+Es gibt **zwei Varianten**. Die Entscheidung fällt nur an einer Stelle
+(Schritt 3), der Rest ist identisch.
+
+| | Variante A: Heimserver | Variante B: Server im Internet |
+|---|---|---|
+| Wo liegen die Daten | zu Hause, bei euch | beim Anbieter (z. B. Netcup) |
+| Erreichbar | im WLAN, von unterwegs über WireGuard | von überall |
+| Verschlüsselung | im Heimnetz direkt, sonst über den WireGuard-Tunnel | HTTPS-Zertifikat |
+| Zusatzkosten | keine | Miete des Servers |
+| Befehl in Schritt 3 | `... \| bash -s -- --lokal` | `... \| bash -s -- DEINE-ADRESSE` |
+
+**Variante A ist für Familiendaten die datenschutzfreundlichere Wahl**, wenn
+ohnehin schon ein Heimserver läuft und WireGuard eingerichtet ist.
+Schritt 1 (Adresse) entfällt dann komplett.
+
 ---
 
 ## Schritt 1: Adresse festlegen
+
+> **Bei Variante A (Heimserver) überspringst du diesen Schritt.**
+
 
 Das Familienbuch braucht eine Internet-Adresse, damit ihr euch später sicher
 (verschlüsselt) anmelden könnt. Zwei Möglichkeiten:
@@ -64,6 +82,26 @@ Beispiel mit einer echten Adresse:
 
 ```
 curl -fsSL https://raw.githubusercontent.com/KaptainPommes/signatur-bilder/claude/family-data-app-4uk4un/family-app/deploy/setup.sh | bash -s -- familie.mustermann.de
+```
+
+**Für Variante A (Heimserver)** stattdessen genau diese Zeile – nichts
+ersetzen:
+
+```
+curl -fsSL https://raw.githubusercontent.com/KaptainPommes/signatur-bilder/claude/family-data-app-4uk4un/family-app/deploy/setup.sh | bash -s -- --lokal
+```
+
+Dabei wird **kein** Webserver installiert und an der Firewall nichts
+verändert. Die App läuft dann auf Port 3000 und ist unter
+`http://SERVER-IP:3000` erreichbar – im WLAN direkt, von unterwegs
+über WireGuard.
+
+**Achtung beim Heimserver-Backup:** Sichert dein restic-Backup nur `/etc`
+und `/home`, fehlen die Familiendaten unter `/opt`. Dann in
+`/usr/local/bin/backup.sh` die Zeile erweitern:
+
+```
+restic backup /etc /home /opt/familienbuch/family-app/data --exclude-caches
 ```
 
 Jetzt läuft ein paar Minuten Text durch – das ist normal. Am Ende steht groß

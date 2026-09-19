@@ -31,15 +31,26 @@ fail() { echo -e "\n\033[1;31mFehler:\033[0m $*" >&2; exit 1; }
 [ "${EUID}" -eq 0 ] || fail "Bitte als root ausführen:  sudo bash setup.sh <domain>"
 command -v apt-get >/dev/null || fail "Dieses Skript ist für Ubuntu oder Debian gemacht."
 
+# Zwei Betriebsarten:
+#   setup.sh familie.example.de   -> Server im Internet, Caddy holt ein
+#                                    HTTPS-Zertifikat, Firewall wird gesetzt
+#   setup.sh --lokal              -> Heimserver: nur im Heimnetz bzw. über
+#                                    WireGuard erreichbar, kein Caddy,
+#                                    Firewall bleibt unangetastet
+LOCAL=0
 DOMAIN="${1:-}"
+if [ "${DOMAIN}" = "--lokal" ] || [ "${DOMAIN}" = "--local" ]; then
+  LOCAL=1
+  DOMAIN=""
+fi
+
 # Beim Aufruf über "curl ... | bash" ist stdin das Skript selbst, deshalb
 # wird die Eingabe direkt vom Terminal gelesen.
-if [ -z "${DOMAIN}" ] && [ -r /dev/tty ]; then
+if [ "${LOCAL}" -eq 0 ] && [ -z "${DOMAIN}" ] && [ -r /dev/tty ]; then
   echo "Unter welcher Adresse soll das Familienbuch erreichbar sein?"
   echo "Beispiel: familie.meine-domain.de"
-  echo "Wenn ihr keine eigene Domain habt, könnt ihr den Standard-Hostnamen"
-  echo "eures Netcup-Servers nehmen (steht im Kundenkonto, z. B. v2202....srv.de)."
-  echo "Leer lassen = nur unverschlüsseltes HTTP (NICHT empfohlen)."
+  echo "Für einen Heimserver stattdessen abbrechen (Strg+C) und neu starten mit:"
+  echo "    bash setup.sh --lokal"
   read -rp "Adresse: " DOMAIN < /dev/tty
 fi
 
@@ -50,11 +61,25 @@ export DEBIAN_FRONTEND=noninteractive
 apt-get update -qq
 apt-get install -y -qq curl git ca-certificates gnupg sqlite3 ufw debian-keyring debian-archive-keyring apt-transport-https
 
-info "Node.js 22 installieren"
-if ! command -v node >/dev/null || [ "$(node -p 'process.versions.node.split(".")[0]' 2>/dev/null || echo 0)" -lt 22 ]; then
+info "Node.js installieren (mindestens Version 22)"
+node_major() { node -p 'process.versions.node.split(".")[0]' 2>/dev/null || echo 0; }
+
+# Zuerst das Paket der Distribution versuchen: aktuelle Ubuntu-Versionen
+# liefern Node 22+ selbst mit, und ein Fremd-Repository kennt brandneue
+# Releases oft noch nicht.
+if [ "$(node_major)" -lt 22 ]; then
+  apt-get install -y -qq nodejs npm >/dev/null 2>&1 || true
+fi
+
+if [ "$(node_major)" -lt 22 ]; then
+  info "Node aus der Distribution ist zu alt – Version 22 von NodeSource holen"
+  apt-get purge -y -qq nodejs npm >/dev/null 2>&1 || true
   curl -fsSL https://deb.nodesource.com/setup_22.x | bash -
   apt-get install -y -qq nodejs
 fi
+
+[ "$(node_major)" -ge 22 ] || fail "Node.js 22 konnte nicht installiert werden."
+command -v npm >/dev/null || apt-get install -y -qq npm
 node --version
 
 # --- Benutzer und Code ------------------------------------------------------
@@ -128,6 +153,10 @@ systemctl is-active --quiet familienbuch || fail "Die App startet nicht. Logs an
 
 # --- Webserver (Caddy) ------------------------------------------------------
 
+if [ "${LOCAL}" -eq 1 ]; then
+  info "Heimserver-Modus: kein Caddy, kein Zertifikat, Firewall bleibt unverändert"
+else
+
 info "Caddy installieren (Webserver mit automatischem HTTPS)"
 if ! command -v caddy >/dev/null; then
   curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' \
@@ -160,6 +189,8 @@ fi
 systemctl reload caddy || systemctl restart caddy
 
 # --- Firewall ---------------------------------------------------------------
+# Nur im Internet-Modus. Auf einem Heimserver wird an einer bestehenden
+# Firewall-Konfiguration nichts verändert.
 
 info "Firewall einrichten"
 SSH_PORT="$(grep -oP '^\s*Port\s+\K[0-9]+' /etc/ssh/sshd_config 2>/dev/null | head -1 || true)"
@@ -169,6 +200,8 @@ ufw allow 80/tcp >/dev/null
 ufw allow 443/tcp >/dev/null
 ufw --force enable >/dev/null
 echo "Offen: SSH (${SSH_PORT}), 80, 443"
+
+fi  # Ende Internet-Modus
 
 # --- Backup -----------------------------------------------------------------
 
@@ -187,6 +220,9 @@ chmod +x /etc/cron.daily/familienbuch-backup
 
 if [ -n "${DOMAIN}" ]; then
   URL="https://${DOMAIN}"
+elif [ "${LOCAL}" -eq 1 ]; then
+  # Ohne Caddy spricht man die App direkt auf ihrem Port an.
+  URL="http://$(hostname -I | awk '{print $1}'):${APP_PORT}"
 else
   URL="http://$(curl -fsS --max-time 5 https://api.ipify.org 2>/dev/null || hostname -I | awk '{print $1}')"
 fi
@@ -219,4 +255,22 @@ if [ -n "${DOMAIN}" ]; then
   echo "wenn ${DOMAIN} tatsächlich auf diesen Server zeigt. Falls die Seite"
   echo "nicht lädt, ein bis zwei Minuten warten und erneut probieren."
   echo
+fi
+
+if [ "${LOCAL}" -eq 1 ]; then
+  cat <<EOF
+WICHTIG – Backup:
+Ein vorhandenes restic-Backup, das nur /etc und /home sichert, erfasst
+${APP_DIR}/data NICHT. Entweder in /usr/local/bin/backup.sh den Pfad
+ergänzen:
+
+    restic backup /etc /home ${APP_DIR}/data --exclude-caches
+
+oder die tägliche Kopie unter /var/backups/familienbuch mitsichern
+(die legt dieses Skript automatisch an).
+
+Von unterwegs erreichbar ist die App über WireGuard – dieselbe Adresse,
+sobald der Tunnel aktiv ist.
+
+EOF
 fi
