@@ -73,6 +73,11 @@ router.get('/me', auth.requireAuth, (req, res) => {
   res.json({ user: req.user, canAddAccount: auth.countUsers() < MAX_ACCOUNTS });
 });
 
+// Wer hat bereits einen Zugang? Damit sichtbar ist, welche Konten es gibt.
+router.get('/users', auth.requireAuth, (req, res) => {
+  res.json({ users: auth.listUsers(), canAddAccount: auth.countUsers() < MAX_ACCOUNTS });
+});
+
 // Weiteres Familienmitglied als Login hinzufügen (z.B. Partner/-in).
 router.post('/users', auth.requireAuth, (req, res) => {
   if (auth.countUsers() >= MAX_ACCOUNTS) {

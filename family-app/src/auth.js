@@ -15,6 +15,12 @@ function findUserByUsername(username) {
   return db.prepare('SELECT * FROM users WHERE username = ?').get(username);
 }
 
+function listUsers() {
+  return db
+    .prepare('SELECT id, username, display_name, color FROM users ORDER BY id ASC')
+    .all();
+}
+
 function createUser({ username, password, displayName, color }) {
   const passwordHash = bcrypt.hashSync(password, 12);
   const info = db
@@ -116,6 +122,7 @@ module.exports = {
   SESSION_COOKIE,
   countUsers,
   findUserByUsername,
+  listUsers,
   createUser,
   verifyPassword,
   createSession,

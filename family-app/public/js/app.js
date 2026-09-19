@@ -32,6 +32,13 @@
     return PALETTE[i % PALETTE.length];
   }
 
+  // Immer nur ein Fenster zeigen – sonst stapeln sie sich übereinander.
+  function closeAllModals() {
+    document.querySelectorAll('.modal-backdrop').forEach((m) => {
+      m.hidden = true;
+    });
+  }
+
   // ---------- Theme ----------
   const themeToggle = document.getElementById('theme-toggle');
   function applyStoredTheme() {
@@ -95,6 +102,7 @@
     householdForm.querySelector('#h-emergency-phone').value = h.emergency_phone || '';
     householdForm.querySelector('#h-notes').value = h.notes || '';
     householdSaveStatus.textContent = '';
+    closeAllModals();
     householdModal.hidden = false;
   }
 
@@ -204,6 +212,7 @@
     deleteMemberBtn.hidden = !(m && m.id);
     memberSaveStatus.textContent = '';
     switchTab('basis');
+    closeAllModals();
     memberModal.hidden = false;
   }
 
@@ -276,10 +285,30 @@
   const accountModal = document.getElementById('account-modal');
   const accountForm = document.getElementById('account-form');
   const accountError = document.getElementById('account-error');
+  const accountSuccess = document.getElementById('account-success');
+  const accountList = document.getElementById('account-list');
+
+  async function renderAccountList() {
+    const res = await fetch('/api/auth/users');
+    if (!res.ok) return;
+    const { users } = await res.json();
+    accountList.innerHTML = users
+      .map(
+        (u) => `<li>
+          <span class="avatar" style="background:${u.color || '#2F5D50'}">${initials(u.display_name)}</span>
+          <span>${escapeHtml(u.display_name)}</span>
+          <span class="uname">${escapeHtml(u.username)}</span>
+        </li>`
+      )
+      .join('');
+  }
 
   document.getElementById('add-account-btn').addEventListener('click', () => {
     accountError.hidden = true;
+    accountSuccess.hidden = true;
     accountForm.reset();
+    renderAccountList();
+    closeAllModals();
     accountModal.hidden = false;
   });
   document.getElementById('account-modal-close').addEventListener('click', () => {
@@ -292,9 +321,11 @@
   accountForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     accountError.hidden = true;
+    accountSuccess.hidden = true;
+    const username = document.getElementById('a-username').value;
     const payload = {
       displayName: document.getElementById('a-name').value,
-      username: document.getElementById('a-username').value,
+      username,
       password: document.getElementById('a-password').value,
     };
     const res = await fetch('/api/auth/users', {
@@ -305,11 +336,17 @@
     const data = await res.json();
     if (!res.ok) {
       accountError.textContent =
-        data.error === 'benutzer_existiert' ? 'Dieser Benutzername ist schon vergeben.' : data.message || 'Konto konnte nicht angelegt werden.';
+        data.error === 'benutzer_existiert'
+          ? `"${username}" gibt es schon – siehe Liste oben. Zum Anmelden dieses Konto benutzen, oder einen anderen Namen wählen.`
+          : data.message || 'Konto konnte nicht angelegt werden.';
       accountError.hidden = false;
+      renderAccountList();
       return;
     }
-    accountModal.hidden = true;
+    accountSuccess.textContent = `Konto für ${data.user.display_name} angelegt. Anmelden mit dem Benutzernamen "${data.user.username}".`;
+    accountSuccess.hidden = false;
+    accountForm.reset();
+    renderAccountList();
   });
 
   // ---------- Boot ----------

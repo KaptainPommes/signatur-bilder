@@ -238,6 +238,59 @@ button {
   margin-bottom: 16px;
 }
 
+.success-banner {
+  background: var(--primary-tint);
+  color: var(--primary);
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 0.9rem;
+  margin-bottom: 16px;
+  font-weight: 600;
+}
+
+.account-list-block {
+  background: var(--surface-sunken);
+  border-radius: 10px;
+  padding: 14px 16px;
+  margin-bottom: 20px;
+}
+
+.account-list-block .label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+
+.account-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.account-list li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.92rem;
+}
+
+.account-list .avatar {
+  width: 24px;
+  height: 24px;
+  font-size: 0.75rem;
+}
+
+.account-list .uname {
+  color: var(--text-muted);
+  font-family: 'IBM Plex Mono', ui-monospace, monospace;
+  font-size: 0.82rem;
+}
+
 .auth-switch {
   margin-top: 20px;
   text-align: center;
@@ -486,6 +539,12 @@ main {
   display: flex;
   justify-content: flex-end;
   z-index: 50;
+}
+
+/* Ohne diese Zeile schlaegt das display:flex oben das hidden-Attribut:
+   die Fenster blieben dauerhaft sichtbar und fingen Klicks ab. */
+.modal-backdrop[hidden] {
+  display: none;
 }
 
 .modal-panel {
