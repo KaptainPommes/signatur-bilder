@@ -150,6 +150,8 @@ Alles im schwarzen Fenster, nachdem du dich wie in Schritt 2 verbunden hast:
 | App neu starten | `systemctl restart familienbuch` |
 | Fehlermeldungen ansehen | `journalctl -u familienbuch -n 50` |
 | Neue Version einspielen | `bash /opt/familienbuch/family-app/deploy/update.sh` |
+| Passwort vergessen | `sudo node /opt/familienbuch/family-app/tools/passwort-setzen.js BENUTZERNAME` |
+| Konten anzeigen | `sudo node /opt/familienbuch/family-app/tools/passwort-setzen.js` (ohne Namen) |
 
 **Backups:** Jede Nacht wird automatisch eine Kopie der Daten angelegt unter
 `/var/backups/familienbuch`. Die letzten 14 Tage werden aufbewahrt.
