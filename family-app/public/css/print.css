@@ -1,0 +1,199 @@
+/* Druckblatt im A4-Format. Bewusst hell und kontrastreich, damit der
+   Ausdruck auch auf einem sparsamen Tintendrucker lesbar bleibt. */
+
+:root {
+  --papier: #ffffff;
+  --tinte: #1b1f1a;
+  --grau: #5d6359;
+  --linie: #c9cec3;
+  --akzent: #2f5d50;
+  --warn: #a8402f;
+  color-scheme: light;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: #e7eae3;
+  color: var(--tinte);
+  font-family: 'Karla', system-ui, sans-serif;
+  font-size: 11pt;
+  line-height: 1.45;
+}
+
+.toolbar {
+  position: sticky;
+  top: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  background: var(--akzent);
+  color: #fff;
+  padding: 10px 18px;
+  font-size: 0.95rem;
+}
+
+.toolbar-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-plain,
+.btn-solid {
+  font: inherit;
+  border-radius: 999px;
+  padding: 7px 16px;
+  cursor: pointer;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  background: transparent;
+  color: #fff;
+}
+
+.btn-solid {
+  background: #fff;
+  color: var(--akzent);
+  border-color: #fff;
+  font-weight: 700;
+}
+
+.sheet {
+  width: 210mm;
+  min-height: 297mm;
+  margin: 24px auto;
+  padding: 18mm 16mm;
+  background: var(--papier);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.15);
+}
+
+.blatt-kopf {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  border-bottom: 2px solid var(--akzent);
+  padding-bottom: 8px;
+  margin-bottom: 18px;
+}
+
+.blatt-kopf h1 {
+  font-family: 'Fraunces', Georgia, serif;
+  font-size: 18pt;
+  margin: 0;
+  color: var(--akzent);
+}
+
+.stand {
+  font-size: 9pt;
+  color: var(--grau);
+}
+
+.person {
+  border: 1px solid var(--linie);
+  border-radius: 6px;
+  padding: 12px 14px;
+  margin-bottom: 14px;
+  /* Eine Person soll nicht mitten im Satz auf die nächste Seite rutschen. */
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+
+.person h2 {
+  font-family: 'Fraunces', Georgia, serif;
+  font-size: 14pt;
+  margin: 0 0 10px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--linie);
+}
+
+.zeile {
+  display: grid;
+  grid-template-columns: 30mm 1fr;
+  gap: 10px;
+  padding: 4px 0;
+  align-items: start;
+}
+
+.zeile + .zeile {
+  border-top: 1px dotted var(--linie);
+}
+
+.label {
+  font-size: 9pt;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--grau);
+  padding-top: 2px;
+}
+
+.wert strong.warn {
+  color: var(--warn);
+}
+
+.klein {
+  font-size: 9.5pt;
+  color: var(--grau);
+}
+
+.liste {
+  margin: 0;
+  padding-left: 16px;
+}
+
+.liste li + li {
+  margin-top: 4px;
+}
+
+table.med {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 10pt;
+}
+
+table.med th,
+table.med td {
+  border: 1px solid var(--linie);
+  padding: 4px 6px;
+  text-align: left;
+}
+
+table.med th {
+  background: #eef1ec;
+  font-size: 9pt;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--grau);
+}
+
+table.med td:not(:first-child),
+table.med th:not(:first-child) {
+  text-align: center;
+  width: 22mm;
+  font-family: 'IBM Plex Mono', ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+@media print {
+  @page {
+    size: A4;
+    margin: 14mm;
+  }
+
+  body {
+    background: #fff;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  .sheet {
+    width: auto;
+    min-height: 0;
+    margin: 0;
+    padding: 0;
+    box-shadow: none;
+  }
+}

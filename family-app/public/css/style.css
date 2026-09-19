@@ -6,6 +6,10 @@
   --text-muted: #5b6259;
   --primary: #2f5d50;
   --primary-strong: #204438;
+  /* Schrift auf primaerfarbenem Grund */
+  --on-primary: #ffffff;
+  /* Kopfleiste bleibt in beiden Themes dunkel */
+  --header-bg: #2f5d50;
   --primary-tint: #dde8e2;
   --accent: #c98a3e;
   --accent-tint: #f3e3cb;
@@ -26,6 +30,8 @@
     --text-muted: #a8afa2;
     --primary: #7faf9c;
     --primary-strong: #9cc3b3;
+    --on-primary: #12201a;
+    --header-bg: #22302a;
     --primary-tint: #24352e;
     --accent: #e3a857;
     --accent-tint: #3a2f1c;
@@ -45,6 +51,8 @@
   --text-muted: #a8afa2;
   --primary: #7faf9c;
   --primary-strong: #9cc3b3;
+  --on-primary: #12201a;
+  --header-bg: #22302a;
   --primary-tint: #24352e;
   --accent: #e3a857;
   --accent-tint: #3a2f1c;
@@ -204,12 +212,13 @@ button {
 
 .btn-primary {
   background: var(--primary);
-  color: #fff;
+  color: var(--on-primary);
   width: 100%;
 }
 
 .btn-primary:hover {
   background: var(--primary-strong);
+  color: var(--on-primary);
 }
 
 .btn-ghost {
@@ -301,7 +310,7 @@ button {
 /* ---------- App shell ---------- */
 
 .app-header {
-  background: var(--primary);
+  background: var(--header-bg);
   color: #fff;
   padding: 18px 28px;
   display: flex;
@@ -354,6 +363,17 @@ button {
   font-weight: 700;
   font-family: 'Fraunces', serif;
   flex: none;
+}
+
+/* Im dunkelgruenen Kopf braucht der Knopf helle Schrift – sonst steht
+   die Beschriftung in Hintergrundfarbe da und ist unsichtbar. */
+.app-header .btn-ghost {
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.45);
+}
+
+.app-header .btn-ghost:hover {
+  background: rgba(255, 255, 255, 0.15);
 }
 
 .icon-btn {
@@ -528,6 +548,210 @@ main {
   font-size: 1.8rem;
   line-height: 1;
   font-family: 'Fraunces', serif;
+}
+
+.card-sizes {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.badge-warn {
+  background: var(--accent-tint);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+/* ---------- Form blocks (Ärzte, Allergien, Medikation) ---------- */
+
+.form-block {
+  border-top: 1px solid var(--border);
+  padding-top: 18px;
+  margin-top: 20px;
+}
+
+.form-block-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.form-block-head h3 {
+  font-family: 'Fraunces', Georgia, serif;
+  font-size: 1.05rem;
+  margin: 0;
+}
+
+.chip-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 10px 0;
+}
+
+.chip {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  border-radius: 10px;
+  padding: 7px 12px;
+  text-align: left;
+  font-size: 0.9rem;
+  line-height: 1.25;
+}
+
+.chip:hover {
+  border-color: var(--primary);
+}
+
+.chip.on {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: var(--on-primary);
+}
+
+.chip.on .chip-sub {
+  color: var(--on-primary);
+  opacity: 0.75;
+}
+
+.chip-main {
+  font-weight: 600;
+}
+
+.chip-sub {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.add-row {
+  display: flex;
+  gap: 8px;
+}
+
+.add-row input {
+  flex: 1;
+  font-family: inherit;
+  font-size: 0.95rem;
+  padding: 9px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.inline-form {
+  background: var(--surface-sunken);
+  border-radius: 10px;
+  padding: 14px 16px;
+  margin-top: 10px;
+}
+
+.inline-form .field {
+  margin-bottom: 10px;
+}
+
+.inline-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.inline-error {
+  color: var(--danger);
+  font-size: 0.85rem;
+  margin-top: 8px;
+}
+
+/* Medikationstabelle */
+
+.med-table {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 8px;
+  overflow-x: auto;
+}
+
+.med-head,
+.med-row {
+  display: grid;
+  grid-template-columns: minmax(120px, 2fr) 70px 70px 70px 32px;
+  gap: 6px;
+  align-items: center;
+  min-width: 380px;
+}
+
+.med-head span {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+}
+
+.med-head span:not(:first-child) {
+  text-align: center;
+}
+
+.med-row input {
+  font-family: inherit;
+  font-size: 0.92rem;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--text);
+  width: 100%;
+}
+
+.med-row input:not(.med-name) {
+  text-align: center;
+}
+
+.row-remove {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 1.2rem;
+  line-height: 1;
+  padding: 4px;
+}
+
+.row-remove:hover {
+  color: var(--danger);
+}
+
+/* Auswahl beim Drucken */
+
+.check-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.check-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.check-item:hover {
+  border-color: var(--primary);
+}
+
+.check-item input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--primary);
 }
 
 /* ---------- Modal / detail panel ---------- */
