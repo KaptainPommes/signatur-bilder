@@ -50,6 +50,9 @@ Wenn alles klappt, steht da am Ende so etwas wie `root@v2202...:~#`.
 
 ## Schritt 3: Einen einzigen Befehl ausführen
 
+Diese Anleitung ist für **Ubuntu** (und Debian) gemacht – bei einem frisch
+bestellten Server ist das genau richtig.
+
 Kopiere die folgende Zeile, **ersetze `DEINE-ADRESSE`** durch die Adresse aus
 Schritt 1, und füge sie im schwarzen Fenster ein (Rechtsklick fügt meist ein):
 
@@ -65,6 +68,13 @@ curl -fsSL https://raw.githubusercontent.com/KaptainPommes/signatur-bilder/claud
 
 Jetzt läuft ein paar Minuten Text durch – das ist normal. Am Ende steht groß
 **"Fertig!"** und darunter die Adresse eurer App.
+
+Falls die Meldung `curl: command not found` kommt, einmal das hier ausführen
+und den Befehl von oben danach nochmal probieren:
+
+```
+apt update && apt install -y curl
+```
 
 ---
 
