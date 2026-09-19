@@ -61,24 +61,27 @@ export DEBIAN_FRONTEND=noninteractive
 apt-get update -qq
 apt-get install -y -qq curl git ca-certificates gnupg sqlite3 ufw debian-keyring debian-archive-keyring apt-transport-https
 
-info "Node.js installieren (mindestens Version 22)"
-node_major() { node -p 'process.versions.node.split(".")[0]' 2>/dev/null || echo 0; }
+info "Node.js installieren"
+# Die App nutzt das eingebaute SQLite von Node (ab 22.5). Statt nur die
+# Hauptversion zu vergleichen, wird direkt geprüft, ob das Modul lädt –
+# Node 22.0 bis 22.4 hat es noch nicht.
+node_ok() { node -e 'require("node:sqlite")' >/dev/null 2>&1; }
 
 # Zuerst das Paket der Distribution versuchen: aktuelle Ubuntu-Versionen
 # liefern Node 22+ selbst mit, und ein Fremd-Repository kennt brandneue
 # Releases oft noch nicht.
-if [ "$(node_major)" -lt 22 ]; then
+if ! node_ok; then
   apt-get install -y -qq nodejs npm >/dev/null 2>&1 || true
 fi
 
-if [ "$(node_major)" -lt 22 ]; then
-  info "Node aus der Distribution ist zu alt – Version 22 von NodeSource holen"
+if ! node_ok; then
+  info "Node aus der Distribution passt nicht – Version 22 von NodeSource holen"
   apt-get purge -y -qq nodejs npm >/dev/null 2>&1 || true
   curl -fsSL https://deb.nodesource.com/setup_22.x | bash -
   apt-get install -y -qq nodejs
 fi
 
-[ "$(node_major)" -ge 22 ] || fail "Node.js 22 konnte nicht installiert werden."
+node_ok || fail "Es konnte kein Node.js mit eingebautem SQLite (ab 22.5) installiert werden. Gefunden: $(node --version 2>/dev/null || echo 'keines')"
 command -v npm >/dev/null || apt-get install -y -qq npm
 node --version
 
