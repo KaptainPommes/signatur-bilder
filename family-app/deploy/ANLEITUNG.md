@@ -84,12 +84,21 @@ Beispiel mit einer echten Adresse:
 curl -fsSL https://raw.githubusercontent.com/KaptainPommes/signatur-bilder/claude/family-data-app-4uk4un/family-app/deploy/setup.sh | bash -s -- familie.mustermann.de
 ```
 
-**Für Variante A (Heimserver)** stattdessen genau diese Zeile – nichts
-ersetzen:
+**Für Variante A (Heimserver)** zwei Befehle, einzeln nacheinander – nichts
+ersetzen. Erst herunterladen:
 
 ```
-curl -fsSL https://raw.githubusercontent.com/KaptainPommes/signatur-bilder/claude/family-data-app-4uk4un/family-app/deploy/setup.sh | bash -s -- --lokal
+curl -fsSL https://raw.githubusercontent.com/KaptainPommes/signatur-bilder/claude/family-data-app-4uk4un/family-app/deploy/setup.sh -o setup.sh
 ```
+
+Dann starten (fragt nach deinem Passwort):
+
+```
+sudo bash setup.sh --lokal
+```
+
+Zwei getrennte Befehle deshalb, weil bei `curl ... | sudo bash` die
+Passwortabfrage leicht untergeht und die Eingabe im falschen Prompt landet.
 
 Dabei wird **kein** Webserver installiert und an der Firewall nichts
 verändert. Die App läuft dann auf Port 3000 und ist unter
