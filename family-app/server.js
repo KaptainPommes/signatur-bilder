@@ -29,6 +29,10 @@ const auth = require('./src/auth');
 
 const app = express();
 app.disable('x-powered-by');
+// Hinter einem Webserver (Caddy/nginx) kommt die echte Besucher-IP im
+// X-Forwarded-For-Header an. Ohne das sähe die Login-Sperre alle Anfragen
+// als 127.0.0.1.
+app.set('trust proxy', 'loopback');
 app.use(express.json({ limit: '256kb' }));
 app.use(cookieParser());
 
