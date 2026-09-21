@@ -65,11 +65,11 @@
 
     const medikation = m.medications.length
       ? `<table class="med">
-          <thead><tr><th>Medikament</th><th>morgens</th><th>mittags</th><th>abends</th></tr></thead>
+          <thead><tr><th>Medikament</th><th class="spalte-dosis">Dosierung</th><th>morgens</th><th>mittags</th><th>abends</th></tr></thead>
           <tbody>${m.medications
             .map(
               (med) =>
-                `<tr><td>${escapeHtml(med.name)}</td><td>${escapeHtml(med.morning) || '–'}</td><td>${
+                `<tr><td>${escapeHtml(med.name)}</td><td class="spalte-dosis">${escapeHtml(med.dose) || '–'}</td><td>${escapeHtml(med.morning) || '–'}</td><td>${
                   escapeHtml(med.noon) || '–'
                 }</td><td>${escapeHtml(med.evening) || '–'}</td></tr>`
             )

@@ -156,11 +156,11 @@
 
     const medikation = m.medications.length
       ? `<table class="detail-med">
-          <thead><tr><th>Medikament</th><th>morgens</th><th>mittags</th><th>abends</th></tr></thead>
+          <thead><tr><th>Medikament</th><th class="spalte-dosis">Dosierung</th><th>morgens</th><th>mittags</th><th>abends</th></tr></thead>
           <tbody>${m.medications
             .map(
               (med) =>
-                `<tr><td>${escapeHtml(med.name)}</td><td>${escapeHtml(med.morning) || '–'}</td><td>${escapeHtml(med.noon) || '–'}</td><td>${escapeHtml(med.evening) || '–'}</td></tr>`
+                `<tr><td>${escapeHtml(med.name)}</td><td class="spalte-dosis">${escapeHtml(med.dose) || '–'}</td><td>${escapeHtml(med.morning) || '–'}</td><td>${escapeHtml(med.noon) || '–'}</td><td>${escapeHtml(med.evening) || '–'}</td></tr>`
             )
             .join('')}</tbody>
         </table>`
@@ -317,6 +317,7 @@
   function medRowHtml(med = {}) {
     return `<div class="med-row">
       <input class="med-name" list="med-names" maxlength="120" value="${escapeHtml(med.name || '')}" placeholder="Name" />
+      <input class="med-dose" maxlength="60" value="${escapeHtml(med.dose || '')}" placeholder="z. B. 400 mg" />
       <input class="med-morning mono" maxlength="30" value="${escapeHtml(med.morning || '')}" />
       <input class="med-noon mono" maxlength="30" value="${escapeHtml(med.noon || '')}" />
       <input class="med-evening mono" maxlength="30" value="${escapeHtml(med.evening || '')}" />
@@ -336,6 +337,7 @@
     return [...medRows.querySelectorAll('.med-row')]
       .map((row) => ({
         name: row.querySelector('.med-name').value,
+        dose: row.querySelector('.med-dose').value,
         morning: row.querySelector('.med-morning').value,
         noon: row.querySelector('.med-noon').value,
         evening: row.querySelector('.med-evening').value,

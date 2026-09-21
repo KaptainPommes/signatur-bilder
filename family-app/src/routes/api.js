@@ -196,12 +196,20 @@ function verknuepfungenSetzen(memberId, body) {
   if (Array.isArray(body.medications)) {
     db.prepare('DELETE FROM medications WHERE member_id = ?').run(memberId);
     const stmt = db.prepare(
-      'INSERT INTO medications (member_id, name, morning, noon, evening, position) VALUES (?, ?, ?, ?, ?, ?)'
+      'INSERT INTO medications (member_id, name, dose, morning, noon, evening, position) VALUES (?, ?, ?, ?, ?, ?, ?)'
     );
     body.medications.slice(0, 30).forEach((med, i) => {
       const name = text(med?.name, 120);
       if (!name) return;
-      stmt.run(memberId, name, text(med?.morning, 30), text(med?.noon, 30), text(med?.evening, 30), i);
+      stmt.run(
+        memberId,
+        name,
+        text(med?.dose, 60),
+        text(med?.morning, 30),
+        text(med?.noon, 30),
+        text(med?.evening, 30),
+        i
+      );
     });
   }
 }

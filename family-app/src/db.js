@@ -127,4 +127,11 @@ for (const spalte of ['kind', 'street', 'zip', 'city', 'email']) {
 // unterscheidet (z. B. Dr. Meier als Hausarzt und als Zahnarzt).
 db.exec(`DROP INDEX IF EXISTS doctors_name_unique`);
 
+// Die Staerke des Medikaments ("400 mg", "5 ml") steht getrennt von der
+// Menge je Tageszeit.
+const medicationColumns = db.prepare(`PRAGMA table_info(medications)`).all().map((c) => c.name);
+if (!medicationColumns.includes('dose')) {
+  db.exec(`ALTER TABLE medications ADD COLUMN dose TEXT DEFAULT ''`);
+}
+
 module.exports = db;

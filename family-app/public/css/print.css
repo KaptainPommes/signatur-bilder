@@ -175,6 +175,13 @@ table.med th:not(:first-child) {
   font-variant-numeric: tabular-nums;
 }
 
+table.med td.spalte-dosis,
+table.med th.spalte-dosis {
+  text-align: left;
+  width: auto;
+  font-family: inherit;
+}
+
 @media print {
   @page {
     size: A4;
