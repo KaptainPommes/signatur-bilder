@@ -91,9 +91,11 @@ info "Systembenutzer '${APP_USER}' anlegen"
 id -u "${APP_USER}" >/dev/null 2>&1 || useradd --system --home "${BASE_DIR}" --shell /usr/sbin/nologin "${APP_USER}"
 
 info "Code nach ${BASE_DIR} holen"
+# Bei einem erneuten Lauf gehoert das Verzeichnis bereits dem Benutzer
+# familienbuch; git als root braucht dann diese Ausnahme.
 if [ -d "${BASE_DIR}/.git" ]; then
-  git -C "${BASE_DIR}" fetch --depth 1 origin "${BRANCH}"
-  git -C "${BASE_DIR}" checkout -B "${BRANCH}" "origin/${BRANCH}"
+  git -c "safe.directory=${BASE_DIR}" -C "${BASE_DIR}" fetch --depth 1 origin "${BRANCH}"
+  git -c "safe.directory=${BASE_DIR}" -C "${BASE_DIR}" checkout -B "${BRANCH}" "origin/${BRANCH}"
 else
   git clone --depth 1 --branch "${BRANCH}" "${REPO_URL}" "${BASE_DIR}"
 fi

@@ -12,6 +12,11 @@ BRANCH="claude/family-data-app-4uk4un"
 
 [ "${EUID}" -eq 0 ] || { echo "Bitte als root ausführen: sudo bash update.sh"; exit 1; }
 
+# Das Verzeichnis gehoert dem Benutzer familienbuch, git laeuft hier aber als
+# root. Ohne diese Ausnahme verweigert git den Zugriff ("dubious ownership").
+# Bewusst nur fuer diesen Aufruf, nicht dauerhaft in der globalen Konfiguration.
+GIT=(git -c "safe.directory=${BASE_DIR}")
+
 echo "==> Sicherheitskopie der Datenbank"
 if [ -f "${APP_DIR}/data/family.db" ]; then
   mkdir -p /var/backups/familienbuch
@@ -19,8 +24,8 @@ if [ -f "${APP_DIR}/data/family.db" ]; then
 fi
 
 echo "==> Neue Version laden"
-git -C "${BASE_DIR}" fetch --depth 1 origin "${BRANCH}"
-git -C "${BASE_DIR}" checkout -B "${BRANCH}" "origin/${BRANCH}"
+"${GIT[@]}" -C "${BASE_DIR}" fetch --depth 1 origin "${BRANCH}"
+"${GIT[@]}" -C "${BASE_DIR}" checkout -B "${BRANCH}" "origin/${BRANCH}"
 
 echo "==> Abhängigkeiten aktualisieren"
 cd "${APP_DIR}"
