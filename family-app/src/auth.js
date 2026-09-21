@@ -33,6 +33,12 @@ function createUser({ username, password, displayName, color }) {
   );
 }
 
+function deleteUser(id) {
+  // Erst die Anmeldungen, sonst bliebe ein Geraet mit gueltigem Cookie zurueck.
+  db.prepare('DELETE FROM sessions WHERE user_id = ?').run(id);
+  return db.prepare('DELETE FROM users WHERE id = ?').run(id);
+}
+
 function verifyPassword(user, password) {
   return bcrypt.compareSync(password, user.password_hash);
 }
@@ -124,6 +130,7 @@ module.exports = {
   findUserByUsername,
   listUsers,
   createUser,
+  deleteUser,
   verifyPassword,
   createSession,
   destroySession,

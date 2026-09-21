@@ -402,16 +402,42 @@
   async function renderAccountList() {
     const { ok, data } = await json('/api/auth/users');
     if (!ok) return;
+    const nurEines = data.users.length <= 1;
     accountList.innerHTML = data.users
-      .map(
-        (u) => `<li>
+      .map((u) => {
+        const selbst = u.id === state.me.id;
+        return `<li>
           <span class="avatar" style="background:${u.color || '#2F5D50'}">${initials(u.display_name)}</span>
           <span>${escapeHtml(u.display_name)}</span>
           <span class="uname">${escapeHtml(u.username)}</span>
-        </li>`
-      )
+          ${
+            selbst
+              ? '<span class="uname selbst-hinweis">das bist du</span>'
+              : nurEines
+                ? ''
+                : `<button type="button" class="account-remove" data-id="${u.id}" data-name="${escapeHtml(u.display_name)}">Entfernen</button>`
+          }
+        </li>`;
+      })
       .join('');
   }
+
+  accountList.addEventListener('click', async (e) => {
+    const btn = e.target.closest('.account-remove');
+    if (!btn) return;
+    if (!confirm(`Zugang von ${btn.dataset.name} wirklich entfernen?\n\nDie Familiendaten bleiben erhalten – nur die Anmeldung wird gelöscht.`)) return;
+    accountError.hidden = true;
+    accountSuccess.hidden = true;
+    const { ok, data } = await json(`/api/auth/users/${btn.dataset.id}`, { method: 'DELETE' });
+    if (!ok) {
+      accountError.textContent = data.message || 'Konto konnte nicht entfernt werden.';
+      accountError.hidden = false;
+    } else {
+      accountSuccess.textContent = `Zugang von ${btn.dataset.name} entfernt.`;
+      accountSuccess.hidden = false;
+    }
+    renderAccountList();
+  });
 
   document.getElementById('add-account-btn').addEventListener('click', () => {
     accountError.hidden = true;

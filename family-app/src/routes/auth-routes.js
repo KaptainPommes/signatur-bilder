@@ -97,4 +97,28 @@ router.post('/users', auth.requireAuth, (req, res) => {
   res.json({ user });
 });
 
+// Konto entfernen. Zwei Sperren: das eigene Konto nicht (sonst sperrt man
+// sich mitten im Betrieb selbst aus) und nie das letzte verbliebene.
+router.delete('/users/:id', auth.requireAuth, (req, res) => {
+  const id = Number(req.params.id);
+  if (!Number.isInteger(id)) return res.status(400).json({ error: 'ungueltige_id' });
+  if (id === req.user.id) {
+    return res.status(400).json({
+      error: 'eigenes_konto',
+      message: 'Das eigene Konto lässt sich nicht entfernen.',
+    });
+  }
+  if (auth.countUsers() <= 1) {
+    return res.status(400).json({
+      error: 'letztes_konto',
+      message: 'Das letzte verbliebene Konto lässt sich nicht entfernen.',
+    });
+  }
+  if (!auth.listUsers().some((u) => u.id === id)) {
+    return res.status(404).json({ error: 'nicht_gefunden' });
+  }
+  auth.deleteUser(id);
+  res.json({ ok: true });
+});
+
 module.exports = router;

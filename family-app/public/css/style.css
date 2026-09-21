@@ -300,6 +300,28 @@ button {
   font-size: 0.82rem;
 }
 
+.account-list .selbst-hinweis {
+  margin-left: auto;
+  font-family: 'Karla', system-ui, sans-serif;
+  font-style: italic;
+}
+
+.account-remove {
+  margin-left: auto;
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--danger);
+  border-radius: 999px;
+  padding: 3px 12px;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.account-remove:hover {
+  border-color: var(--danger);
+  background: var(--danger-tint);
+}
+
 .auth-switch {
   margin-top: 20px;
   text-align: center;
