@@ -113,4 +113,18 @@ for (const spalte of ['shoe_size', 'clothing_size', 'trouser_size']) {
   }
 }
 
+// Die Arztanschrift war zuerst ein einzelnes Freitextfeld und ist jetzt in
+// Art, Strasse, PLZ und Ort aufgeteilt. Die alte Spalte address bleibt
+// erhalten, damit bereits erfasste Anschriften nicht verloren gehen.
+const doctorColumns = db.prepare(`PRAGMA table_info(doctors)`).all().map((c) => c.name);
+for (const spalte of ['kind', 'street', 'zip', 'city', 'email']) {
+  if (!doctorColumns.includes(spalte)) {
+    db.exec(`ALTER TABLE doctors ADD COLUMN ${spalte} TEXT DEFAULT ''`);
+  }
+}
+
+// Derselbe Name kann jetzt mehrfach vorkommen, solange die Art sich
+// unterscheidet (z. B. Dr. Meier als Hausarzt und als Zahnarzt).
+db.exec(`DROP INDEX IF EXISTS doctors_name_unique`);
+
 module.exports = db;

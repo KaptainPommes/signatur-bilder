@@ -105,9 +105,138 @@
     memberGrid.innerHTML = state.members.map((m, i) => memberCardHtml(m, i)).join('');
     memberGrid.appendChild(addMemberBtn);
     memberGrid.querySelectorAll('.member-card').forEach((btn) => {
-      btn.addEventListener('click', () => openMemberModal(Number(btn.dataset.id)));
+      btn.addEventListener('click', () => openDetail(Number(btn.dataset.id)));
     });
   }
+
+  // ---------- Detailansicht (nur lesen) ----------
+  const detailModal = document.getElementById('detail-modal');
+  const detailMenu = document.getElementById('detail-menu');
+  const detailMenuBtn = document.getElementById('detail-menu-btn');
+  let detailId = null;
+
+  function arztAnschrift(d) {
+    const ort = [d.zip, d.city].filter(Boolean).join(' ');
+    // Aus der Zeit vor den Einzelfeldern kann noch eine Freitext-Anschrift
+    // vorhanden sein; die wird dann weiterhin angezeigt.
+    return [d.street, ort].filter(Boolean).join(', ') || d.address || '';
+  }
+
+  function detailZeile(label, wert) {
+    if (!wert) return '';
+    return `<div class="detail-row"><span class="detail-label">${label}</span><span class="detail-value">${wert}</span></div>`;
+  }
+
+  function renderDetail(m) {
+    const namen = (liste) => liste.map((c) => escapeHtml(c.name)).join(', ');
+    const groessen = [
+      m.shoe_size && `Schuhe ${escapeHtml(m.shoe_size)}`,
+      m.clothing_size && `Kleidung ${escapeHtml(m.clothing_size)}`,
+      m.trouser_size && `Hose ${escapeHtml(m.trouser_size)}`,
+    ]
+      .filter(Boolean)
+      .join(' · ');
+
+    const aerzte = m.doctors.length
+      ? `<ul class="detail-doctors">${m.doctors
+          .map((d) => {
+            const zeilen = [
+              arztAnschrift(d),
+              d.phone ? `Tel. ${escapeHtml(d.phone)}` : '',
+              d.email ? escapeHtml(d.email) : '',
+            ].filter(Boolean);
+            return `<li>
+              ${d.kind ? `<span class="doctor-kind">${escapeHtml(d.kind)}</span>` : ''}
+              <strong>${escapeHtml(d.name)}</strong>
+              ${zeilen.length ? `<span class="klein">${zeilen.join('<br />')}</span>` : ''}
+            </li>`;
+          })
+          .join('')}</ul>`
+      : '';
+
+    const medikation = m.medications.length
+      ? `<table class="detail-med">
+          <thead><tr><th>Medikament</th><th>morgens</th><th>mittags</th><th>abends</th></tr></thead>
+          <tbody>${m.medications
+            .map(
+              (med) =>
+                `<tr><td>${escapeHtml(med.name)}</td><td>${escapeHtml(med.morning) || '–'}</td><td>${escapeHtml(med.noon) || '–'}</td><td>${escapeHtml(med.evening) || '–'}</td></tr>`
+            )
+            .join('')}</tbody>
+        </table>`
+      : '';
+
+    const inhalt = [
+      detailZeile('Geboren', m.birthdate ? `${formatDate(m.birthdate)}${alterJahre(m.birthdate) ? ` <span class="klein">(${alterJahre(m.birthdate)})</span>` : ''}` : ''),
+      detailZeile('Größen', groessen),
+      m.allergies.length ? detailZeile('Allergien', `<strong class="warnfarbe">${namen(m.allergies)}</strong>`) : '',
+      m.illnesses.length ? detailZeile('Krankheiten', namen(m.illnesses)) : '',
+      aerzte ? detailZeile('Ärzte', aerzte) : '',
+      medikation ? detailZeile('Medikation', medikation) : '',
+    ]
+      .filter(Boolean)
+      .join('');
+
+    document.getElementById('detail-avatar').textContent = initials(m.name);
+    document.getElementById('detail-avatar').style.background = m.color || '#2F5D50';
+    document.getElementById('detail-name').textContent = m.name;
+    document.getElementById('detail-sub').textContent = m.birthdate ? alterJahre(m.birthdate) : '';
+    document.getElementById('detail-body').innerHTML =
+      inhalt || '<p class="field-hint">Für diese Person ist noch nichts eingetragen.</p>';
+  }
+
+  function alterJahre(iso) {
+    if (!iso) return '';
+    const geb = new Date(iso + 'T00:00:00');
+    if (Number.isNaN(geb.getTime())) return '';
+    const heute = new Date();
+    let jahre = heute.getFullYear() - geb.getFullYear();
+    const m = heute.getMonth() - geb.getMonth();
+    if (m < 0 || (m === 0 && heute.getDate() < geb.getDate())) jahre -= 1;
+    return jahre >= 0 ? `${jahre} Jahre` : '';
+  }
+
+  function openDetail(id) {
+    const m = state.members.find((x) => x.id === id);
+    if (!m) return;
+    detailId = id;
+    renderDetail(m);
+    detailMenu.hidden = true;
+    detailMenuBtn.setAttribute('aria-expanded', 'false');
+    closeAllModals();
+    detailModal.hidden = false;
+  }
+
+  detailMenuBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    detailMenu.hidden = !detailMenu.hidden;
+    detailMenuBtn.setAttribute('aria-expanded', String(!detailMenu.hidden));
+  });
+
+  // Klick daneben schließt das Menü wieder.
+  document.addEventListener('click', (e) => {
+    if (!detailMenu.hidden && !e.target.closest('.menu-wrap')) {
+      detailMenu.hidden = true;
+      detailMenuBtn.setAttribute('aria-expanded', 'false');
+    }
+  });
+
+  document.getElementById('detail-edit-btn').addEventListener('click', () => {
+    detailMenu.hidden = true;
+    openMemberModal(detailId);
+  });
+
+  document.getElementById('detail-print-btn').addEventListener('click', () => {
+    detailMenu.hidden = true;
+    window.open(`/drucken.html?ids=${detailId}`, '_blank');
+  });
+
+  document.getElementById('detail-close').addEventListener('click', () => {
+    detailModal.hidden = true;
+  });
+  detailModal.addEventListener('click', (e) => {
+    if (e.target === detailModal) detailModal.hidden = true;
+  });
 
   // ---------- Personen-Formular ----------
   const memberModal = document.getElementById('member-modal');
@@ -130,11 +259,15 @@
       ? state.catalog.doctors
           .map((d) => {
             const an = state.auswahl.doctorIds.has(d.id);
-            const zusatz = [d.address, d.phone].filter(Boolean).join(' · ');
-            return `<button type="button" class="chip ${an ? 'on' : ''}" data-doctor="${d.id}">
-                <span class="chip-main">${escapeHtml(d.name)}</span>
-                ${zusatz ? `<span class="chip-sub">${escapeHtml(zusatz)}</span>` : ''}
-              </button>`;
+            const zusatz = [arztAnschrift(d), d.phone].filter(Boolean).join(' · ');
+            return `<div class="chip-wrap">
+                <button type="button" class="chip ${an ? 'on' : ''}" data-doctor="${d.id}">
+                  ${d.kind ? `<span class="chip-kind">${escapeHtml(d.kind)}</span>` : ''}
+                  <span class="chip-main">${escapeHtml(d.name)}</span>
+                  ${zusatz ? `<span class="chip-sub">${escapeHtml(zusatz)}</span>` : ''}
+                </button>
+                <button type="button" class="chip-edit" data-edit-doctor="${d.id}" aria-label="Arzt bearbeiten" title="Bearbeiten">✎</button>
+              </div>`;
           })
           .join('')
       : '<p class="field-hint">Noch kein Arzt angelegt.</p>';
@@ -159,6 +292,11 @@
 
   // Klicks auf Chips schalten die Auswahl um.
   memberForm.addEventListener('click', (e) => {
+    const stift = e.target.closest('.chip-edit');
+    if (stift) {
+      arztFormOeffnen(Number(stift.dataset.editDoctor));
+      return;
+    }
     const chip = e.target.closest('.chip');
     if (!chip) return;
     if (chip.dataset.doctor) {
@@ -241,41 +379,69 @@
   const newDoctorForm = document.getElementById('new-doctor-form');
   const doctorError = document.getElementById('doctor-error');
 
-  document.getElementById('new-doctor-btn').addEventListener('click', () => {
+  const D_FELDER = {
+    kind: 'd-kind',
+    name: 'd-name',
+    street: 'd-street',
+    zip: 'd-zip',
+    city: 'd-city',
+    phone: 'd-phone',
+    email: 'd-email',
+  };
+  let arztBearbeitetId = null;
+
+  function arztFormOeffnen(id) {
+    arztBearbeitetId = id || null;
+    const d = id ? state.catalog.doctors.find((x) => x.id === id) : null;
     doctorError.hidden = true;
-    ['d-name', 'd-address', 'd-phone'].forEach((id) => (document.getElementById(id).value = ''));
+    Object.entries(D_FELDER).forEach(([key, elId]) => {
+      document.getElementById(elId).value = d ? d[key] || '' : '';
+    });
+    // Alte Freitext-Anschrift zum Aufteilen in das Straßenfeld übernehmen.
+    if (d && d.address && !d.street && !d.city) {
+      document.getElementById('d-street').value = d.address;
+    }
+    document.getElementById('save-doctor-btn').textContent = id ? 'Änderung speichern' : 'Arzt speichern';
     newDoctorForm.hidden = false;
-    document.getElementById('d-name').focus();
-  });
+    document.getElementById(id ? 'd-kind' : 'd-kind').focus();
+  }
+
+  document.getElementById('new-doctor-btn').addEventListener('click', () => arztFormOeffnen(null));
   document.getElementById('cancel-doctor-btn').addEventListener('click', () => {
     newDoctorForm.hidden = true;
+    arztBearbeitetId = null;
   });
 
   document.getElementById('save-doctor-btn').addEventListener('click', async () => {
     doctorError.hidden = true;
-    const payload = {
-      name: document.getElementById('d-name').value,
-      address: document.getElementById('d-address').value,
-      phone: document.getElementById('d-phone').value,
-    };
+    const payload = {};
+    Object.entries(D_FELDER).forEach(([key, elId]) => {
+      payload[key] = document.getElementById(elId).value;
+    });
     if (!payload.name.trim()) {
       doctorError.textContent = 'Bitte einen Namen eintragen.';
       doctorError.hidden = false;
       return;
     }
-    const { ok, status, data } = await json('/api/doctors', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    });
+    const { ok, status, data } = await json(
+      arztBearbeitetId ? `/api/doctors/${arztBearbeitetId}` : '/api/doctors',
+      {
+        method: arztBearbeitetId ? 'PUT' : 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      }
+    );
     if (!ok) {
       doctorError.textContent =
-        status === 409 ? 'Diesen Arzt gibt es schon – er steht bereits in der Liste.' : 'Konnte nicht gespeichert werden.';
+        status === 409
+          ? 'Diesen Eintrag gibt es schon – er steht bereits in der Liste.'
+          : 'Konnte nicht gespeichert werden.';
       doctorError.hidden = false;
       return;
     }
     await ladeKatalog();
-    state.auswahl.doctorIds.add(data.id); // neu angelegter Arzt gleich ausgewählt
+    if (!arztBearbeitetId) state.auswahl.doctorIds.add(data.id); // neuer Arzt gleich ausgewählt
+    arztBearbeitetId = null;
     renderChips();
     newDoctorForm.hidden = true;
   });
@@ -339,6 +505,8 @@
     memberSaveStatus.textContent = 'Gespeichert.';
     setTimeout(() => {
       memberModal.hidden = true;
+      // Nach dem Bearbeiten zurück auf die Übersicht der Person.
+      openDetail(data.id);
     }, 500);
   });
 

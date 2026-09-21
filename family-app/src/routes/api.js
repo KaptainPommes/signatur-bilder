@@ -43,16 +43,30 @@ router.get('/catalog', (req, res) => {
   });
 });
 
+function arztAusBody(body) {
+  return {
+    kind: text(body?.kind, 60),
+    name: text(body?.name, 120),
+    street: text(body?.street, 120),
+    zip: text(body?.zip, 12),
+    city: text(body?.city, 80),
+    phone: text(body?.phone, 60),
+    email: text(body?.email, 120),
+  };
+}
+
 router.post('/doctors', (req, res) => {
-  const name = text(req.body?.name, 120);
-  if (!name) return res.status(400).json({ error: 'name_erforderlich' });
+  const d = arztAusBody(req.body);
+  if (!d.name) return res.status(400).json({ error: 'name_erforderlich' });
   const vorhanden = db
-    .prepare('SELECT * FROM doctors WHERE name = ? COLLATE NOCASE')
-    .get(name);
+    .prepare('SELECT * FROM doctors WHERE name = ? COLLATE NOCASE AND IFNULL(kind, \'\') = ? COLLATE NOCASE')
+    .get(d.name, d.kind);
   if (vorhanden) return res.status(409).json({ error: 'existiert_schon', doctor: vorhanden });
   const info = db
-    .prepare('INSERT INTO doctors (name, address, phone) VALUES (?, ?, ?)')
-    .run(name, text(req.body?.address, 200), text(req.body?.phone, 60));
+    .prepare(
+      'INSERT INTO doctors (kind, name, street, zip, city, phone, email) VALUES (@kind, @name, @street, @zip, @city, @phone, @email)'
+    )
+    .run(d);
   res.status(201).json(db.prepare('SELECT * FROM doctors WHERE id = ?').get(info.lastInsertRowid));
 });
 
@@ -61,14 +75,14 @@ router.put('/doctors/:id', (req, res) => {
   if (!db.prepare('SELECT id FROM doctors WHERE id = ?').get(id)) {
     return res.status(404).json({ error: 'nicht_gefunden' });
   }
-  const name = text(req.body?.name, 120);
-  if (!name) return res.status(400).json({ error: 'name_erforderlich' });
-  db.prepare('UPDATE doctors SET name = ?, address = ?, phone = ? WHERE id = ?').run(
-    name,
-    text(req.body?.address, 200),
-    text(req.body?.phone, 60),
-    id
-  );
+  const d = arztAusBody(req.body);
+  if (!d.name) return res.status(400).json({ error: 'name_erforderlich' });
+  // Die alte Freitext-Anschrift wird beim Speichern geleert: ihr Inhalt
+  // steckt ab jetzt in den Einzelfeldern.
+  db.prepare(
+    `UPDATE doctors SET kind = @kind, name = @name, street = @street, zip = @zip,
+     city = @city, phone = @phone, email = @email, address = '' WHERE id = @id`
+  ).run({ ...d, id });
   res.json(db.prepare('SELECT * FROM doctors WHERE id = ?').get(id));
 });
 

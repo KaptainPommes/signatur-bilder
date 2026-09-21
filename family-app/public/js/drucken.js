@@ -41,11 +41,20 @@
       .filter(Boolean)
       .join(' · ');
 
+    const anschrift = (d) => {
+      const ort = [d.zip, d.city].filter(Boolean).join(' ');
+      // Vor der Aufteilung in Einzelfelder gab es ein Freitextfeld; dessen
+      // Inhalt wird weiterhin gedruckt, solange er nicht ersetzt wurde.
+      return [d.street, ort].filter(Boolean).join(', ') || d.address || '';
+    };
+
     const aerzte = m.doctors.length
       ? `<ul class="liste">${m.doctors
           .map((d) => {
-            const teile = [d.address, d.phone].filter(Boolean).map(escapeHtml);
-            return `<li><strong>${escapeHtml(d.name)}</strong>${
+            const teile = [anschrift(d), d.phone ? `Tel. ${d.phone}` : '', d.email]
+              .filter(Boolean)
+              .map(escapeHtml);
+            return `<li>${d.kind ? `<span class="art">${escapeHtml(d.kind)}</span> ` : ''}<strong>${escapeHtml(d.name)}</strong>${
               teile.length ? `<br /><span class="klein">${teile.join(' · ')}</span>` : ''
             }</li>`;
           })

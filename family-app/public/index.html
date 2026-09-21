@@ -36,6 +36,32 @@
     </div>
   </main>
 
+  <!-- Übersicht einer Person (nur lesen) -->
+  <div class="modal-backdrop center" id="detail-modal" hidden>
+    <div class="modal-card">
+      <div class="detail-head">
+        <div class="detail-head-left">
+          <span class="avatar detail-avatar" id="detail-avatar"></span>
+          <div>
+            <h2 id="detail-name"></h2>
+            <div class="detail-sub" id="detail-sub"></div>
+          </div>
+        </div>
+        <div class="detail-head-right">
+          <div class="menu-wrap">
+            <button class="icon-btn dark" id="detail-menu-btn" aria-label="Menü" aria-haspopup="true" aria-expanded="false">⋯</button>
+            <div class="menu" id="detail-menu" hidden>
+              <button type="button" id="detail-edit-btn">Bearbeiten</button>
+              <button type="button" id="detail-print-btn">Daten drucken</button>
+            </div>
+          </div>
+          <button class="close-x" id="detail-close" aria-label="Schließen">×</button>
+        </div>
+      </div>
+      <div class="detail-body" id="detail-body"></div>
+    </div>
+  </div>
+
   <!-- Person anlegen / bearbeiten -->
   <div class="modal-backdrop" id="member-modal" hidden>
     <div class="modal-panel">
@@ -83,16 +109,50 @@
 
           <div class="inline-form" id="new-doctor-form" hidden>
             <div class="field">
-              <label for="d-name">Name / Praxis</label>
-              <input id="d-name" maxlength="120" placeholder="z. B. Dr. Meier, Kinderarzt" />
+              <label for="d-kind">Art</label>
+              <input id="d-kind" list="arzt-arten" maxlength="60" placeholder="z. B. Hausarzt" />
+              <datalist id="arzt-arten">
+                <option value="Hausarzt"></option>
+                <option value="Kinderarzt"></option>
+                <option value="Zahnarzt"></option>
+                <option value="Kieferorthopäde"></option>
+                <option value="Frauenarzt"></option>
+                <option value="Augenarzt"></option>
+                <option value="HNO-Arzt"></option>
+                <option value="Hautarzt"></option>
+                <option value="Orthopäde"></option>
+                <option value="Psychotherapeut"></option>
+                <option value="Physiotherapeut"></option>
+                <option value="Logopäde"></option>
+                <option value="Ergotherapeut"></option>
+                <option value="Apotheke"></option>
+              </datalist>
             </div>
             <div class="field">
-              <label for="d-address">Anschrift</label>
-              <input id="d-address" maxlength="200" placeholder="Straße, PLZ Ort" />
+              <label for="d-name">Name / Praxis</label>
+              <input id="d-name" maxlength="120" placeholder="z. B. Dr. med. Meier" />
+            </div>
+            <div class="field">
+              <label for="d-street">Straße und Hausnummer</label>
+              <input id="d-street" maxlength="120" />
+            </div>
+            <div class="plz-ort">
+              <div class="field">
+                <label for="d-zip">PLZ</label>
+                <input id="d-zip" class="mono" maxlength="12" inputmode="numeric" />
+              </div>
+              <div class="field">
+                <label for="d-city">Ort</label>
+                <input id="d-city" maxlength="80" />
+              </div>
             </div>
             <div class="field">
               <label for="d-phone">Telefon</label>
-              <input id="d-phone" class="mono" maxlength="60" />
+              <input id="d-phone" class="mono" type="tel" maxlength="60" />
+            </div>
+            <div class="field">
+              <label for="d-email">E-Mail</label>
+              <input id="d-email" type="email" maxlength="120" />
             </div>
             <div class="inline-form-actions">
               <button type="button" class="btn btn-ghost btn-sm" id="cancel-doctor-btn">Abbrechen</button>
