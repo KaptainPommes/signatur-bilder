@@ -1,0 +1,11 @@
+# Enthaelt den Verwaltercode – gehoert nicht ins Repository
+api/config.php
+
+# Datenbank und ihre Begleitdateien
+data/*.sqlite
+data/*.sqlite-wal
+data/*.sqlite-shm
+data/*.sqlite-journal
+
+node_modules/
+.DS_Store

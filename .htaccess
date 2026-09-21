@@ -1,0 +1,46 @@
+# Familienbuch – Apache-Konfiguration (IONOS und andere Apache-Hoster)
+
+Options -Indexes
+DirectoryIndex index.html
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # HTTPS erzwingen. IONOS beendet die Verschluesselung vor dem Webserver,
+    # deshalb wird zusaetzlich X-Forwarded-Proto geprueft.
+    RewriteCond %{HTTPS} !=on
+    RewriteCond %{HTTP:X-Forwarded-Proto} !=https
+    RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
+
+    # Alles unterhalb von /api an den Front-Controller.
+    # Bewusst ohne RewriteBase, damit auch eine Installation in einem
+    # Unterordner funktioniert.
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteRule ^api/(.*)$ api/index.php/$1 [QSA,L]
+</IfModule>
+
+<IfModule mod_headers.c>
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set X-Frame-Options "DENY"
+    Header always set Referrer-Policy "same-origin"
+    Header always set Cross-Origin-Opener-Policy "same-origin"
+    # Ein Jahr HSTS. Erst einschalten, wenn HTTPS sicher laeuft –
+    # danach verweigern Browser jeden Zugriff ueber http.
+    # Header always set Strict-Transport-Security "max-age=31536000"
+
+    # Gesundheitsdaten nicht zwischenspeichern.
+    <FilesMatch "\.(html|json|webmanifest)$">
+        Header set Cache-Control "no-store, private"
+    </FilesMatch>
+</IfModule>
+
+# Versteckte Dateien und Sicherungskopien nicht ausliefern.
+<FilesMatch "(^\.|\.(sqlite|sqlite3|db|log|bak|sample\.php)$)">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order allow,deny
+        Deny from all
+    </IfModule>
+</FilesMatch>

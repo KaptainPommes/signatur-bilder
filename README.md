@@ -1,87 +1,171 @@
-# Familienakte – PWA
+# Familienbuch
 
-Private Progressive Web App für die wichtigsten Gesundheits- und Stammdaten der
-Familie. Installation direkt über den Browser („Zum Home-Bildschirm“) – bewusst
-ohne App Store und ohne Play Store.
+Private Web-App, in der eine Familie die wichtigsten Daten zu jedem Mitglied
+pflegt: Stammdaten, Größen, Allergien, Krankheiten, Ärzte und Medikation.
+Läuft als installierbare PWA auf dem Home-Bildschirm – ohne App Store.
 
-## Stand: Schritt 1 – Grundgerüst
+**Zugang ohne Passwörter:** Jedes Gerät wird einmalig über einen
+Einladungslink freigeschaltet und bleibt danach angemeldet.
 
-Lauffähig und auf iPhone wie Android installierbar. Enthalten sind:
+## Projektstand
 
-| Bereich | Umsetzung |
+| Teil | Stand |
 |---|---|
-| Datenfelder | Name, Geburtsdatum (mit Altersanzeige), Allergien, Krankheiten, Medikation (morgens/mittags/abends inkl. Hinweis), Ärzte (Fachrichtung, Anschrift, Telefon), Schuh-/Kleider-/Hosengröße, Notizen |
-| Bedienung | Übersicht → Detailansicht → Formular; große Schrift, Touch-Ziele ≥ 48 px, Hell-/Dunkelmodus, Unterstützung für Notch/Safe Area |
-| Direktaktionen | Telefonnummer antippen = anrufen, Adresse antippen = Route (Apple Maps auf iOS, sonst Google Maps) |
-| Offline | Service Worker mit vorgeladener App-Shell, Offline-Hinweis, Fallback-Seite |
-| Updates | Banner „Neue Version ist bereit“ statt stillem Neuladen |
-| Sicherung | Export und Import als JSON-Datei über das Menü |
+| Datenbank und Schnittstelle (PHP) | **fertig und getestet** |
+| Zugang per Einladungslink | **fertig und getestet** |
+| Oberfläche nach der neuen Spezifikation | offen – nächster Schritt |
 
-### ⚠️ Noch kein Zugriffsschutz
+> Die Dateien `index.html`, `app.css` und `js/` stammen noch aus dem ersten
+> Grundgerüst und arbeiten rein lokal im Browser. Sie sind **noch nicht** an die
+> Schnittstelle angebunden und werden im nächsten Schritt ersetzt.
 
-Dieser Schritt enthält bewusst **kein Backend**. Daraus folgt:
+## Zugangskonzept
 
-* Die Daten liegen **ausschließlich lokal** im Browser-Speicher des jeweiligen
-  Geräts. Kein Abgleich zwischen Geräten, keine Übertragung irgendwohin.
-* Wer die URL kennt, kann die (leere) App öffnen. `js/auth.js` legt bereits die
-  Client-Hälfte des Magic-Link-Verfahrens – geprüft wird ein Token aber erst,
-  wenn `ENDPOINT` dort auf die spätere Server-Route zeigt.
+1. Du meldest dich einmalig mit dem **Verwaltercode** aus `api/config.php` an
+   (`https://deine-subdomain/#verwaltung=DEIN_CODE`).
+2. In der App erzeugst du je Gerät einen **Einladungslink** und verschickst ihn,
+   z. B. per WhatsApp.
+3. Oma öffnet den Link **einmal** – fertig. Der Server setzt ein Cookie, das
+   Gerät bleibt ein Jahr angemeldet und verlängert sich bei jeder Nutzung.
+4. Der Link ist danach verbraucht und verfällt ohnehin nach 24 Stunden.
+5. Verloren gegangenes Handy? In der Geräteliste **Zugang entziehen** – sofort
+   wirksam, ohne die anderen zu stören.
 
-**Deshalb in diesem Stand noch keine echten Gesundheitsdaten eintragen.** Zum
-Ausprobieren dient der Knopf „Beispiel laden“.
+Der Zugang liegt bewusst in einem `httpOnly`-Cookie und nicht in
+`localStorage`: Skripte können ihn nicht auslesen, und iOS räumt ihn nicht nach
+einigen Wochen Nichtnutzung weg.
 
-## Dateien
+### Absicherung
+- Einladungs- und Sitzungstoken: 32 zufällige Bytes, in der Datenbank nur als
+  SHA-256-Hash abgelegt
+- Cookie: `httpOnly`, `Secure`, `SameSite=Lax`
+- Zusätzliche Herkunftsprüfung bei jedem schreibenden Zugriff
+- Nach 8 Fehlversuchen 5 Minuten Sperre, gezählt je Besucheradresse
+- HTTPS wird erzwungen (`.htaccess` und serverseitig)
+- Datenbank liegt außerhalb des Web-Verzeichnisses bzw. hinter `.htaccess`
 
-```
-index.html              App-Shell, iOS-Meta-Tags, Einstiegspunkt
-manifest.webmanifest    Installierbarkeit: standalone, Icons, Farben
-sw.js                   Service Worker (Caching, Offline, Update)
-offline.html            Rückfallseite ohne Verbindung
-app.css                 Gesamtes Styling, hell und dunkel
-js/store.js             Datenschicht – hier wird später der Server angebunden
-js/auth.js              Magic-Link-/Token-Logik (Client-Seite)
-js/app.js               Oberfläche, Routing, PWA-Einbindung
-icons/                  App-Icons inkl. maskable und apple-touch-icon
-```
+## Installation auf IONOS
 
-## Lokal ausprobieren
-
-Ein Service Worker braucht `https` oder `localhost` – die Datei direkt per
-Doppelklick zu öffnen genügt nicht.
+**1. Vorbereiten**
 
 ```bash
-python3 -m http.server 8080
-# danach http://localhost:8080 aufrufen
+cp api/config.sample.php api/config.php
+php -r "echo bin2hex(random_bytes(24)), PHP_EOL;"   # Verwaltercode erzeugen
 ```
 
-Für einen Test auf dem Handy im selben WLAN die IP des Rechners verwenden.
-iOS-Safari installiert allerdings nur von einer **HTTPS**-Adresse – für den
-echten Gerätetest also besser gleich auf die spätere Domain veröffentlichen.
+Den erzeugten Wert als `admin_code` in `api/config.php` eintragen. Dieser Code
+ist dein Notschlüssel – damit kommst du auch dann wieder hinein, wenn kein
+angemeldetes Gerät mehr übrig ist. Nicht weitergeben.
 
-## Installieren
+**2. Hochladen**
 
-* **Android/Chrome:** Die App schlägt die Installation selbst vor; alternativ
-  Menü ⋮ → „App installieren“.
-* **iOS/Safari:** Teilen-Symbol → „Zum Home-Bildschirm“. Safari zeigt keinen
-  eigenen Dialog an, deshalb blendet die App unten eine Anleitung ein.
+Alles per FTP in das Verzeichnis der Subdomain, `.htaccess` eingeschlossen
+(FTP-Programme blenden Dateien mit Punkt am Anfang oft aus).
+Nicht hochladen: `tests/`, `node_modules/`.
 
-## Nach Änderungen: Version hochzählen
+**3. Datenbank außerhalb des Web-Verzeichnisses ablegen (empfohlen)**
 
-In `sw.js` steht oben `const VERSION = 'v1';`. Diese Zahl bei jeder Änderung an
-HTML/CSS/JS erhöhen – sonst liefert der Service Worker weiter die alten Dateien
-aus dem Cache aus.
+Wenn dein Paket einen Ordner oberhalb der Subdomain erlaubt, dort ein
+Verzeichnis anlegen und in `api/config.php` eintragen:
 
-## Nächste Schritte
+```php
+'db_path' => '/homepages/xx/dxxxxxxx/familienbuch-daten/familienbuch.sqlite',
+```
 
-1. **Backend + Magic Link** – Token serverseitig ausstellen und prüfen,
-   `ENDPOINT` in `js/auth.js` setzen. Erst damit ist die App geschützt.
-2. **Synchronisierung** – `Store.adapter` in `js/store.js` gegen einen
-   Server-Adapter tauschen, damit alle Familienmitglieder denselben Stand sehen.
-3. **Veröffentlichen** – inklusive HTTPS und eigener Subdomain.
+Andernfalls bleibt es beim mitgelieferten `data/`, das durch `.htaccess`
+geschützt ist. Die Prüfseite sagt dir, welcher Fall vorliegt.
+
+**4. Prüfen**
+
+`https://deine-subdomain/pruefung.php?code=DEIN_CODE` aufrufen. Die Seite
+prüft PHP-Version, SQLite, Schreibrechte, HTTPS und ob `/api` erreichbar ist.
+Nach erfolgreicher Einrichtung kann `pruefung.php` gelöscht werden.
+
+**5. HTTPS**
+
+Im IONOS-Kundenbereich das Zertifikat für die Subdomain aktivieren. Ohne HTTPS
+legt iOS die App nicht auf den Home-Bildschirm. Läuft HTTPS stabil, in der
+`.htaccess` zusätzlich die `Strict-Transport-Security`-Zeile aktivieren.
+
+## Sicherung der Daten
+
+Die gesamte Datenbank ist **eine einzige Datei** (`familienbuch.sqlite`).
+Regelmäßig per FTP herunterladen – das ist die komplette Sicherung.
+Zurückspielen heißt: Datei wieder hochladen. Ohne Sicherung sind die Daten bei
+einem Ausfall weg; das ist der Preis dafür, dass alles bei dir liegt.
+
+## Tests
+
+```bash
+sh tests/run.sh
+```
+
+Startet einen eigenen Testserver mit frischer Datenbank und prüft 40 Fälle:
+Anmeldung, Einladungen, Zugangsentzug, Wiederverwendung, Sortierung,
+Eingabeprüfung und die Sperre nach Fehlversuchen. Die echten Daten und deine
+`api/config.php` bleiben dabei unberührt.
+
+## Schnittstelle
+
+Alle Antworten sind JSON. Schreibende Zugriffe verlangen ein angemeldetes Gerät.
+
+| Methode | Adresse | Zweck |
+|---|---|---|
+| GET | `/api/session` | Anmeldestatus, Grenzwerte |
+| POST | `/api/auth/redeem` | Einladungslink einlösen |
+| POST | `/api/auth/admin` | Anmeldung mit Verwaltercode |
+| POST | `/api/auth/logout` | Abmelden |
+| GET/POST | `/api/invites` | Einladungen auflisten / erzeugen *(Verwaltung)* |
+| DELETE | `/api/invites/{id}` | Einladung zurückziehen *(Verwaltung)* |
+| GET | `/api/devices` | Geräteliste *(Verwaltung)* |
+| DELETE/PATCH | `/api/devices/{id}` | Zugang entziehen / Recht ändern *(Verwaltung)* |
+| GET | `/api/data` | kompletter Datenbestand |
+| POST/PUT/DELETE | `/api/persons[/{id}]` | Person anlegen, ändern, entfernen |
+| POST/PUT | `/api/doctors[/{id}]` | Arzt anlegen, ändern |
+| POST/PUT | `/api/allergies[/{id}]` | Allergie anlegen, ändern |
+| POST/PUT | `/api/illnesses[/{id}]` | Krankheit anlegen, ändern |
+
+Schreibende Zugriffe auf Personen liefern den kompletten Datenbestand zurück –
+die Oberfläche braucht danach keine zweite Abfrage.
+
+### Wiederverwendung
+Ärzte, Allergien und Krankheiten liegen in gemeinsamen Listen und werden
+Personen nur zugeordnet. Wird ein bereits vorhandener Eintrag erneut angelegt
+(Groß-/Kleinschreibung und Leerraum egal), gibt es **keinen Fehler**: die
+Schnittstelle liefert den vorhandenen Eintrag mit `"created": false` zurück.
+Derselbe Arztname darf mehrfach vorkommen, solange die Art sich unterscheidet.
+Beim Löschen einer Person verschwinden nur die Zuordnungen.
+
+## Kommandozeile (optional, benötigt SSH)
+
+```bash
+php bin/familienbuch.php status
+php bin/familienbuch.php einladung "Oma Erna" [--verwalter]
+php bin/familienbuch.php geraete
+php bin/familienbuch.php entziehen 3
+```
+
+Ohne SSH geht alles davon ebenso in der App selbst.
+
+## Abweichungen von der Spezifikation
+
+Diese Punkte habe ich bewusst anders umgesetzt – bitte gegenlesen:
+
+| Spezifikation | Umsetzung | Grund |
+|---|---|---|
+| Benutzername + Passwort, max. 6 Konten | Einladungslink je Gerät, max. 12 Geräte | von dir so gewünscht; ein Mensch hat oft Handy *und* Tablet |
+| Anmeldung 30 Tage gültig | 365 Tage, bei Nutzung verlängert | Großeltern öffnen die App selten – nach 30 Tagen stünden sie vor einer Anmeldung, die es nicht mehr gibt |
+| Keine Rechteabstufung | Daten dürfen alle sehen und ändern; nur Einladungen und Geräteverwaltung sind der Verwaltung vorbehalten | sonst könnte jedes Gerät alle anderen aussperren |
+| Passwort-Zurücksetzen per Kommandozeile | Verwaltercode aus `api/config.php` | funktioniert auch ohne SSH, das IONOS-Pakete nicht immer haben |
+
+## Nächster Schritt
+
+Oberfläche nach der neuen Spezifikation: Kachelraster, Leseansicht mit
+Drei-Punkte-Menü, Formular mit Wiederverwendungs-Kacheln, Druckblatt und die
+Geräteverwaltung – angebunden an die hier beschriebene Schnittstelle.
 
 ## Hinweis zum Repository
 
-`crafting-hill-logo.png`, `facebook-icon.png` und `instagram-icon.png` im
-Wurzelverzeichnis stammen aus der früheren Nutzung dieses Repositories
-(E-Mail-Signatur) und gehören nicht zur App. Sie sind unangetastet geblieben –
-sie können gelöscht oder in einen Unterordner verschoben werden.
+`crafting-hill-logo.png`, `facebook-icon.png` und `instagram-icon.png` stammen
+aus der früheren Nutzung dieses Repositories (E-Mail-Signatur) und gehören
+nicht zur App.
