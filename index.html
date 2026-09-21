@@ -2,19 +2,20 @@
 <html lang="de">
 <head>
   <meta charset="utf-8">
-  <title>Familienakte</title>
+  <title>Familienbuch</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="description" content="Wichtige Gesundheits- und Stammdaten der Familie – immer griffbereit.">
+  <meta name="description" content="Wichtige Daten der Familie – immer griffbereit.">
   <meta name="color-scheme" content="light dark">
   <meta name="theme-color" content="#1f7a74" media="(prefers-color-scheme: light)">
   <meta name="theme-color" content="#0d2b2b" media="(prefers-color-scheme: dark)">
   <meta name="robots" content="noindex, nofollow, noarchive">
+  <meta name="referrer" content="same-origin">
 
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icons/favicon-32.png" sizes="32x32">
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 
-  <!-- iOS: Standalone-Modus, Statusleiste, Name unter dem Homescreen-Icon -->
+  <!-- iOS: Standalone-Modus, Statusleiste, Name unter dem Home-Bildschirm-Symbol -->
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -26,59 +27,41 @@
 <body>
   <a class="skip-link" href="#view">Zum Inhalt springen</a>
 
-  <header class="appbar" id="appbar">
-    <button class="appbar__back" id="btn-back" type="button" hidden aria-label="Zurück zur Übersicht">
+  <header class="appbar">
+    <button class="iconbtn" id="btn-back" type="button" hidden aria-label="Zurück">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>
     </button>
-    <h1 class="appbar__title" id="appbar-title">Familienakte</h1>
-    <button class="appbar__action" id="btn-menu" type="button" aria-label="Menü öffnen" aria-expanded="false">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="5" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="12" cy="19" r="1.8"/></svg>
+    <h1 class="appbar__title" id="appbar-title">Familienbuch</h1>
+    <button class="iconbtn" id="btn-theme" type="button" aria-label="Farbschema wechseln">◐</button>
+    <button class="iconbtn" id="btn-menu" type="button" hidden aria-label="Menü öffnen">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <circle cx="12" cy="5" r="1.9"/><circle cx="12" cy="12" r="1.9"/><circle cx="12" cy="19" r="1.9"/>
+      </svg>
     </button>
   </header>
+
+  <div class="offline-bar" id="offline-bar" role="status" hidden>
+    Keine Internetverbindung.
+  </div>
 
   <main id="view" class="view" tabindex="-1">
     <p class="loading">Wird geladen …</p>
   </main>
 
-  <!-- Menü -->
-  <div class="sheet" id="menu-sheet" hidden>
-    <div class="sheet__backdrop" data-close-menu></div>
-    <div class="sheet__panel" role="dialog" aria-modal="true" aria-label="Menü">
-      <h2 class="sheet__title">Menü</h2>
-      <button class="sheet__item" type="button" id="menu-add">
-        <span aria-hidden="true">＋</span> Person hinzufügen
-      </button>
-      <button class="sheet__item" type="button" id="menu-export">
-        <span aria-hidden="true">⬇</span> Daten sichern (Datei)
-      </button>
-      <button class="sheet__item" type="button" id="menu-import">
-        <span aria-hidden="true">⬆</span> Sicherung einlesen
-      </button>
-      <button class="sheet__item sheet__item--muted" type="button" id="menu-about">
-        <span aria-hidden="true">ⓘ</span> Über diese App
-      </button>
-      <button class="sheet__item sheet__item--cancel" type="button" data-close-menu>Abbrechen</button>
-    </div>
-  </div>
-
-  <!-- Hinweis zur Installation (iOS zeigt keinen eigenen Dialog an) -->
-  <div class="banner banner--install" id="install-hint" hidden>
+  <!-- iOS zeigt keinen eigenen Installationsdialog – dort hilft nur die Anleitung. -->
+  <div class="banner" id="install-hint" hidden>
     <p id="install-hint-text"></p>
     <button type="button" id="install-action" class="banner__btn" hidden>Installieren</button>
     <button type="button" id="install-dismiss" class="banner__close" aria-label="Hinweis schließen">✕</button>
   </div>
 
-  <!-- Neue Version verfügbar -->
-  <div class="banner banner--update" id="update-banner" hidden>
+  <div class="banner" id="update-banner" hidden>
     <p>Eine neue Version ist bereit.</p>
-    <button type="button" id="update-action" class="banner__btn">Jetzt aktualisieren</button>
+    <button type="button" id="update-action" class="banner__btn">Aktualisieren</button>
   </div>
 
-  <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
-  <input type="file" id="import-file" accept="application/json,.json" hidden>
-
-  <script src="js/store.js"></script>
-  <script src="js/auth.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/api.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>

@@ -9,15 +9,30 @@ Einladungslink freigeschaltet und bleibt danach angemeldet.
 
 ## Projektstand
 
-| Teil | Stand |
-|---|---|
-| Datenbank und Schnittstelle (PHP) | **fertig und getestet** |
-| Zugang per Einladungslink | **fertig und getestet** |
-| Oberfläche nach der neuen Spezifikation | offen – nächster Schritt |
+Vollständig und getestet: Datenbank, Schnittstelle, Zugang per Einladungslink,
+Oberfläche, Druckblatt und Geräteverwaltung. 92 automatische Tests
+(40 Schnittstelle, 52 Oberfläche) laufen durch.
 
-> Die Dateien `index.html`, `app.css` und `js/` stammen noch aus dem ersten
-> Grundgerüst und arbeiten rein lokal im Browser. Sie sind **noch nicht** an die
-> Schnittstelle angebunden und werden im nächsten Schritt ersetzt.
+## Die Oberfläche
+
+| Ansicht | Inhalt |
+|---|---|
+| **Übersicht** | Kachelraster aller Personen mit Namenskürzel in eigener Farbe, Geburtsdatum, Anzahl Allergien / Krankheiten / Medikamente und den Größen |
+| **Leseansicht** | Nur anzeigen, nichts bearbeiten. Allergien stehen rot ganz oben, danach Stammdaten mit berechnetem Alter, Krankheiten, Medikationstabelle und Ärzte mit voller Anschrift. Telefonnummer antippen wählt, Adresse antippen öffnet die Route. Drei-Punkte-Menü oben rechts mit „Bearbeiten“ und „Daten drucken“ |
+| **Formular** | Schuh- und Kleidergröße als Auswahlliste, Hosengröße frei. Ärzte, Allergien und Krankheiten als anklickbare Kacheln zur Mehrfachauswahl; neue Einträge direkt daneben anlegen. Ärzte über das Stift-Symbol bearbeiten. Gespeichert wird erst beim Klick auf „Speichern“ – beim Verlassen mit offenen Änderungen fragt die App nach |
+| **Druckauswahl** | Ankreuzfelder je Person mit „Alle auswählen“, öffnet ein A4-Blatt in einem neuen Tab |
+| **Zugänge** | Einladungslinks erzeugen und zurückziehen, angemeldete Geräte einsehen und aussperren (nur für Geräte mit Verwalterrecht) |
+
+Dazu: helles und dunkles Farbschema (umschaltbar über das Symbol in der
+Kopfleiste, die Wahl wird gemerkt), ausgelegt für Handy, Tablet und Rechner,
+Schrift und Schaltflächen groß genug für die Großeltern.
+
+### Offline
+Der zuletzt geladene Datenstand bleibt im Gerät und wird ohne Verbindung
+weiterhin angezeigt – damit stehen Telefonnummer und Medikation auch beim Arzt
+ohne Empfang zur Verfügung. Ein Hinweis in der Kopfleiste macht kenntlich, dass
+es sich um den zuletzt geladenen Stand handelt. Wird einem Gerät der Zugang
+entzogen, verwirft es diesen Stand beim nächsten Aufruf sofort.
 
 ## Zugangskonzept
 
@@ -100,10 +115,21 @@ einem Ausfall weg; das ist der Preis dafür, dass alles bei dir liegt.
 sh tests/run.sh
 ```
 
-Startet einen eigenen Testserver mit frischer Datenbank und prüft 40 Fälle:
-Anmeldung, Einladungen, Zugangsentzug, Wiederverwendung, Sortierung,
-Eingabeprüfung und die Sperre nach Fehlversuchen. Die echten Daten und deine
-`api/config.php` bleiben dabei unberührt.
+Startet einen eigenen Testserver mit frischer Datenbank. Die echten Daten und
+deine `api/config.php` bleiben dabei unberührt.
+
+- **Schnittstelle (40 Fälle):** Anmeldung, Einladungen, Zugangsentzug,
+  Wiederverwendung, Sortierung, Eingabeprüfung, Sperre nach Fehlversuchen
+- **Oberfläche (52 Fälle):** kompletter Ablauf in einem echten Browser im
+  iPhone-Format – Person anlegen, Kacheln auswählen, speichern, drucken,
+  Einladung verschicken und einlösen, Zugang entziehen, offline weiterarbeiten
+
+Der Oberflächentest braucht Playwright und wird ohne es übersprungen:
+
+```bash
+npm install playwright && npx playwright install chromium
+sh tests/run.sh api        # nur die Schnittstelle
+```
 
 ## Schnittstelle
 
@@ -157,12 +183,19 @@ Diese Punkte habe ich bewusst anders umgesetzt – bitte gegenlesen:
 | Anmeldung 30 Tage gültig | 365 Tage, bei Nutzung verlängert | Großeltern öffnen die App selten – nach 30 Tagen stünden sie vor einer Anmeldung, die es nicht mehr gibt |
 | Keine Rechteabstufung | Daten dürfen alle sehen und ändern; nur Einladungen und Geräteverwaltung sind der Verwaltung vorbehalten | sonst könnte jedes Gerät alle anderen aussperren |
 | Passwort-Zurücksetzen per Kommandozeile | Verwaltercode aus `api/config.php` | funktioniert auch ohne SSH, das IONOS-Pakete nicht immer haben |
+| „Gespeichert wird erst beim Klick auf Speichern“ | gilt für die Person. Ein **neu angelegter** Arzt bzw. eine neue Allergie wird sofort gespeichert | die gemeinsame Liste braucht den Eintrag, bevor er einer Person zugeordnet werden kann. Bricht man das Personenformular danach ab, bleibt der Eintrag in der Liste stehen |
 
-## Nächster Schritt
+## Was die App bewusst nicht kann
 
-Oberfläche nach der neuen Spezifikation: Kachelraster, Leseansicht mit
-Drei-Punkte-Menü, Formular mit Wiederverwendungs-Kacheln, Druckblatt und die
-Geräteverwaltung – angebunden an die hier beschriebene Schnittstelle.
+- Ärzte, Allergien und Krankheiten lassen sich nicht löschen. Ärzte sind über
+  das Stift-Symbol änderbar; Allergien und Krankheiten umbenennen kann die
+  Schnittstelle, eine Schaltfläche dafür gibt es noch nicht
+- keine Fotos, Dokumente oder Dateianhänge
+- kein Freitext-Notizfeld
+- keine Aufzeichnung, wer wann was geändert hat
+- keine Erinnerungen, kein Kalender, keine Benachrichtigungen
+- keine Rechteabstufung bei den Daten: jedes angemeldete Gerät darf alles sehen
+  und ändern
 
 ## Hinweis zum Repository
 
